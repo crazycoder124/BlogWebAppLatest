@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlogWebApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240501042458_disabeswloutupclauseinnotification")]
-    partial class disabeswloutupclauseinnotification
+    [Migration("20250719064855_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

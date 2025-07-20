@@ -18,10 +18,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-var notificationConnectionString = builder.Configuration.GetConnectionString("NotificationConnection") ?? throw new InvalidOperationException("Connection string 'NotificationConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(notificationConnectionString),
-    ServiceLifetime.Singleton);
+//var notificationConnectionString = builder.Configuration.GetConnectionString("NotificationConnection") ?? throw new InvalidOperationException("Connection string 'NotificationConnection' not found.");
+//builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//    options.UseSqlServer(notificationConnectionString),
+//    ServiceLifetime.Singleton);
 
 // Register ApplicationDbContext as scoped for other services
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -38,10 +38,11 @@ builder.Services.AddIdentity<User, Role>(options => options.SignIn.RequireConfir
 builder.Services.AddSignalR();
 
 //DI
-builder.Services.AddScoped<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddScoped<NotificationHub>();
-builder.Services.AddScoped<SubscribeNotificationTableDependency>();
-
+builder.Services.AddScoped<INotificationService, NotificationService>();
+//builder.Services.AddScoped<SubscribeNotificationTableDependency>();
+builder.Services.AddSingleton<SubscribeNotificationTableDependency>();
 
 builder.Services.AddSingleton<IEmailSender, EmailSender>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
@@ -105,6 +106,6 @@ app.UseEndpoints(endpoints =>
 
 });
 #pragma warning restore ASP0014 // Suggest using top level route registrations
-app.UseSqlTableDependency<SubscribeNotificationTableDependency>(notificationConnectionString);
+app.UseSqlTableDependency<SubscribeNotificationTableDependency>(connectionString);
 
 app.Run();

@@ -5,7 +5,7 @@
 namespace BlogWebApp.Migrations
 {
     /// <inheritdoc />
-    public partial class disabeswloutupclauseinnotification : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

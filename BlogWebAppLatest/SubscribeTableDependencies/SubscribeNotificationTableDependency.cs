@@ -1,8 +1,10 @@
 ﻿using BlogWebApp.Hubs;
 using BlogWebApp.Models;
 using BlogWebApp.SubscribeTableDependencies;
+using Microsoft.AspNetCore.SignalR;
 using TableDependency.SqlClient;
 using TableDependency.SqlClient.Base.Enums;
+using TableDependency.SqlClient.Base.EventArgs;
 
 
 namespace BlogWebApp.SubscribeTableDependencies
@@ -11,11 +13,12 @@ namespace BlogWebApp.SubscribeTableDependencies
     {
         //private const DmlTriggerType UpdateOf = DmlTriggerType.Insert | DmlTriggerType.Update;
         SqlTableDependency<Notification> tableDependency;
-        NotificationHub notificationHub;
+        //NotificationHub notificationHub;
+        private readonly IServiceProvider _serviceProvider;
 
-        public SubscribeNotificationTableDependency(NotificationHub notificationHub)
+        public SubscribeNotificationTableDependency(IServiceProvider serviceProvider)
         {
-            this.notificationHub = notificationHub;
+            _serviceProvider = serviceProvider;
         }
 
         public void SubscribeTableDependency(string connectionString)
@@ -24,32 +27,51 @@ namespace BlogWebApp.SubscribeTableDependencies
             //tableDependency = new SqlTableDependency<Notification>(connectionString, "Notifications",DmlTriggerType.Insert);
             tableDependency.OnChanged += TableDependency_OnChanged;
             tableDependency.OnError += TableDependency_OnError;
-            tableDependency.Start();
+            tableDependency.OnStatusChanged += TableDependency_OnStatusChanged;
+            try
+            {
+                tableDependency.Start();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("TableDependency failed to start: " + ex.Message);
+            }
+
+         
         }
 
         private void TableDependency_OnError(object sender, TableDependency.SqlClient.Base.EventArgs.ErrorEventArgs e)
         {
             Console.WriteLine($"{nameof(Notification)} SqlTableDependency error: {e.Error.Message}");
         }
-
-        private async void TableDependency_OnChanged(object sender, TableDependency.SqlClient.Base.EventArgs.RecordChangedEventArgs<Notification> e)
+        private void TableDependency_OnStatusChanged(object sender, StatusChangedEventArgs e)
         {
-            if(e.ChangeType != TableDependency.SqlClient.Base.Enums.ChangeType.None)
+           Console.WriteLine($"{nameof(Notification)} SqlTableDependency error: {e.Status}");
+        }
+
+        private async void TableDependency_OnChanged(object sender, RecordChangedEventArgs<Notification> e)
+        {
+            if (e.ChangeType != ChangeType.None)
             {
                 var notification = e.Entity;
-                if(notification.MessageType == "All")
+                using (var scope = _serviceProvider.CreateScope())
                 {
-                    await notificationHub.SendNotificationToAll(notification.Title  );
-                }
-                else if(notification.MessageType == "Personal")
-                {
-                    await notificationHub.SendNotificationToClient(notification.Body, notification.ForUserId, notification.Id);
-                }
-                else if (notification.MessageType == "Group")
-                {
-                    await notificationHub.SendNotificationToGroup(notification.Body, notification.Username);
+                    var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
+
+                    if (notification.MessageType == "All")
+                    {
+                        await notificationService.SendNotificationToAllAsync(notification.Title);
+                    }
+                    else if (notification.MessageType == "Personal")
+                    {
+                        await notificationService.SendNotificationToClientAsync(notification.Body, notification.ForUserId, notification.Id);
+                    }
+                    else if (notification.MessageType == "Group")
+                    {
+                        await notificationService.SendNotificationToGroupAsync(notification.Body, notification.Username);
+                    }
                 }
             }
         }
-    }
+    }           
 }

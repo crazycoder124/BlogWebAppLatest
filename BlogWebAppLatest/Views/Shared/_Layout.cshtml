@@ -134,6 +134,11 @@
         <link href="~/toastr/css/toastr.css" rel="stylesheet">
 
     <script src="~/toastr/js/toastr.js"></script>
+   
+    @* js for live notification *@
+    <script src="~/js/site.js" asp-append-version="true"> </script>
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"> </script>
+    <script src="~/js/notification.js"> </script>
 
     @if (TempData["SuccessMessage"] != null)
     {
@@ -152,5 +157,6 @@
     @* <link href="~/assets/css/style.css" rel="stylesheet"> *@
 
     @await RenderSectionAsync("Scripts", required: false)
+   
 </body>
 </html>

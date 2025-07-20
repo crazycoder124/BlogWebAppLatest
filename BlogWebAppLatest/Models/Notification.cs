@@ -1,16 +1,17 @@
 ﻿using BlogWebApp.Models.IdentityModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace BlogWebApp.Models
 {
     public class Notification
     {
+        [Key]
         public int Id { get; set; }
         public string Title { get; set; }   // This is the Notification Title
         public string? Body { get; set; }   
         public string? MessageType { get; set; }
         public string? Username { get; set; }
         public Guid UserId { get; set; }
-        
         public string? ForUserId { get; set; }
         // Foreign key referencing the user who receives the notification
         //public int? ReactionId { get; set; } // Nullable foreign key referencing the reaction associated with the notification
